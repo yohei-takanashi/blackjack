@@ -1,75 +1,113 @@
 import random
 
-player = {"me", "dealer"}
-card_list = []
-for suit in range(4):
-    for number in range(1, 14):
-        card_list.append(number)
-random.shuffle(card_list)  # 山札シャッフル
+
+class Card:
+    def __init__(self):
+        self.hand = []
+        self.list = []
+        self.deck = self.create_deck()
+
+    def create_deck(self):
+        for suit in range(4):
+            for number in range(1, 14):
+                self.list.append(number)
+        random.shuffle(self.list)
+        return self.list
+
+    def draw_card(self, player_hand):
+        player_hand.append(self.list[0])
+        print(f"引いたカードの数字は{self.list[0]}")
+        self.list.pop(0)
 
 
-def judgement(player):  # バースト判定
-    if player == "me":
-        if sum(my_hand) > 21:
-            print("バースト！プレイヤーの負けです")
-            exit()
+class You:
+    def __init__(self, name):
+        self.name = name
+        self.hand = []
+
+    def judgement(self):
+        if sum(self.hand) > 21:
+            print(f"バースト！{self.name}の負けです")
+            return True
+        return False
+
+    def sum_value(self):
+        return sum(self.hand)
+
+    def hit_or_stand(self, card):
+        while True:
+            input_value = input("0:カードを引く 1:引かないでやめる")
+            if input_value == "0":
+                print("ヒット！")
+                card.draw_card(self.hand)
+                print(f"合計は{self.sum_value()}")
+                if self.judgement():
+                    return True
+            else:
+                print("プレイヤーはスタンド")
+                return False
+
+
+class Dealer(You):
+    def __init__(self, name):
+        super().__init__(name)
+
+    def hit_or_stand(self, card):
+        while self.sum_value() <= 15:
+            print("ヒット！")
+            card.draw_card(self.hand)
+            print(f"合計は{self.sum_value()}")
+            if self.judgement():
+                return True
+        else:
+            print("ディーラーはスタンド")
+            return False
+
+
+def blackjack():
+    card = Card()
+    you = You("あなた")
+    dealer = Dealer("ディーラー")
+    print("ブラックジャックを開始します")
+    print("プレイヤーのターン")
+    card.draw_card(you.hand)
+    card.draw_card(you.hand)
+    print(f"合計は{you.sum_value()}")
+    if you.judgement():
+        return True
+    if you.hit_or_stand(card):
+        return True
+
+    print("\nディーラーのターン")
+    card.draw_card(dealer.hand)
+    card.draw_card(dealer.hand)
+    print(f"合計は{dealer.sum_value()}")
+    if dealer.judgement():
+        return
+    if dealer.hit_or_stand(card):
+        return True
+
+    you_value = you.sum_value()
+    dealer_value = dealer.sum_value()
+
+    print("\n結果発表")
+    print(f"あなたの合計: {you.sum_value()}")
+    print(f"ディーラーの合計: {dealer.sum_value()}")
+
+    if (
+        you_value > dealer_value
+        or dealer_value > 21
+        and you_value <= 21
+    ):
+        print("プレイヤーの勝利")
+    elif (
+        you_value < dealer_value
+        and dealer_value <= 21
+        or you_value > 21
+    ):
+        print("ディーラーの勝利")
     else:
-        if sum(dealer_hand) > 21:
-            print("バースト！ディーラーの負けです")
-            exit()
+        print("引き分け")
 
 
-# me
-my_hand = []
-
-
-def draw_card(player):
-    if player == "me":
-        my_hand.append(card_list[0])
-        print(f"引いたカードの数字は{card_list[0]}")
-        card_list.pop(0)
-    else:
-        dealer_hand.append(card_list[0])
-        print(f"引いたカードの数字は{card_list[0]}")
-        card_list.pop(0)
-
-
-print("プレイヤーのターン")
-draw_card("me")
-draw_card("me")
-print(f"合計は{sum(my_hand)}")
-judgement("me")
-hit_or_stand = input("0:カードを引く 1:引かないでやめる")
-while hit_or_stand == "0":
-    print("ヒット！")
-    draw_card("me")
-    print(f"合計は{sum(my_hand)}")
-    judgement("me")
-    hit_or_stand = input("0:カードを引く 1:引かないでやめる")
-else:
-    print("プレイヤーはスタンド")
-
-# dealer
-dealer_hand = []
-
-
-print("ディーラーのターン")
-draw_card("dealer")
-draw_card("dealer")
-print(f"合計は{sum(dealer_hand)}")
-judgement("dealer")
-while sum(dealer_hand) <= 15:
-    print("ヒット！")
-    draw_card("dealer")
-    print(f"合計は{sum(dealer_hand)}")
-    judgement("dealer")
-else:
-    print("ディーラーはスタンド")
-
-
-if sum(my_hand) > sum(dealer_hand):
-    print("プレイヤーの勝利")
-elif sum(my_hand) == sum(dealer_hand):
-    print("同点なので引き分け")
-else:
-    print("ディーラーの勝利")
+blackjack()
